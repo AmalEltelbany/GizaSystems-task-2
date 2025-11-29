@@ -1,0 +1,105 @@
+---
+# Step 1: Create directories
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ petclinic_home }}"
+    - "{{ maven_home }}"
+
+# Step 2: Download Maven
+- name: Download Maven
+  get_url:
+    url: "{{ maven_download_url }}"
+    dest: "/home/amal/devops/downloads/maven.tar.gz"
+
+# Step 3: Extract Maven
+- name: Extract Maven
+  unarchive:
+    src: "/home/amal/devops/downloads/maven.tar.gz"
+    dest: "{{ maven_home }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+# Step 4: Download Pet Clinic from GitHub
+- name: Check if PetClinic ZIP exists
+  stat:
+    path: "/home/amal/devops/downloads/petclinic.zip"
+  register: petclinic_zip
+
+- name: Download Pet Clinic ZIP
+  get_url:
+    url: "https://github.com/spring-projects/spring-petclinic/archive/refs/heads/main.zip"
+    dest: "/home/amal/devops/downloads/petclinic.zip"
+  when: not petclinic_zip.stat.exists
+- name: Clean up before extract
+  file:
+    path: "/home/amal/devops/downloads/spring-petclinic-main"
+    state: absent
+
+- name: Extract Pet Clinic to temp folder
+  unarchive:
+    src: "/home/amal/devops/downloads/petclinic.zip"
+    dest: "/home/amal/devops/downloads/"
+    remote_src: yes
+
+- name: Remove old petclinic folder
+  file:
+    path: "{{ petclinic_home }}"
+    state: absent
+
+- name: Move extracted folder to petclinic home
+  command: mv /home/amal/devops/downloads/spring-petclinic-main {{ petclinic_home }}
+# Step 4a: Create ServletInitializer for WAR deployment
+- name: Create ServletInitializer class
+  copy:
+    content: |
+      package org.springframework.samples.petclinic;
+
+      import org.springframework.boot.builder.SpringApplicationBuilder;
+      import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+
+      public class ServletInitializer extends SpringBootServletInitializer {
+          @Override
+          protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+              return application.sources(PetClinicApplication.class);
+          }
+      }
+    dest: "{{ petclinic_home }}/src/main/java/org/springframework/samples/petclinic/ServletInitializer.java"
+
+# Step 4b: Add WAR packaging to pom.xml
+- name: Add WAR packaging
+  lineinfile:
+    path: "{{ petclinic_home }}/pom.xml"
+    insertafter: "<modelVersion>4.0.0</modelVersion>"
+    line: "  <packaging>war</packaging>"
+
+# Step 4c: Remove Java version enforcement
+- name: Remove Java version check
+  replace:
+    path: "{{ petclinic_home }}/pom.xml"
+    regexp: '<requireJavaVersion>[\s\S]*?</requireJavaVersion>'
+    replace: ''
+
+
+# Step 5: Build Pet Clinic with Maven
+- name: Build Pet Clinic
+  shell: /home/amal/task-02/scripts/build.sh
+  args:
+    creates: "{{ petclinic_home }}/target/spring-petclinic-*.war"
+
+# Step 6: Deploy to Tomcat
+- name: Find WAR file
+  find:
+    paths: "{{ petclinic_home }}/target"
+    patterns: "*.war"
+  register: war_file
+
+- name: Copy WAR to Tomcat webapps
+  copy:
+    src: "{{ war_file.files[0].path }}"
+    dest: "{{ tomcat_home }}/webapps/petclinic.war"
+    remote_src: yes
+  notify: Restart Tomcat

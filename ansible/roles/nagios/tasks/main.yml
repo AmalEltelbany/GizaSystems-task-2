@@ -1,0 +1,32 @@
+---
+# Step 1: Create directories
+- name: Create Nagios directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ nagios_home }}"
+    - "{{ nagios_home }}/bin"
+    - "{{ nagios_home }}/etc"
+    - "{{ nagios_home }}/var"
+
+# Step 2: Create Tomcat check script
+- name: Create Tomcat monitoring script
+  template:
+    src: check_tomcat.sh.j2
+    dest: "{{ nagios_home }}/bin/check_tomcat.sh"
+    mode: '0755'
+
+# Step 3: Create Nagios config
+- name: Create Nagios config file
+  template:
+    src: nagios.cfg.j2
+    dest: "{{ nagios_home }}/etc/nagios.cfg"
+
+# Step 4: Create monitoring runner script
+- name: Create monitoring script
+  template:
+    src: monitor.sh.j2
+    dest: "{{ nagios_home }}/bin/monitor.sh"
+    mode: '0755'

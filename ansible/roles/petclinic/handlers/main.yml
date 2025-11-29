@@ -1,0 +1,9 @@
+---
+- name: Restart Tomcat
+  shell: |
+    {{ tomcat_home }}/bin/shutdown.sh || true
+    sleep 2
+    export JAVA_HOME={{ java_home }}
+    export CATALINA_HOME={{ tomcat_home }}
+    {{ tomcat_home }}/bin/startup.sh
+    sleep 10

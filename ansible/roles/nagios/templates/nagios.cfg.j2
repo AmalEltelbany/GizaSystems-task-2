@@ -1,0 +1,11 @@
+# Nagios Configuration File
+
+# Log file location
+log_file={{ nagios_home }}/var/nagios.log
+
+# Check interval (seconds)
+check_interval=60
+
+# Services to monitor
+[tomcat]
+check_command={{ nagios_home }}/bin/check_tomcat.sh

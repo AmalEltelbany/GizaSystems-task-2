@@ -1,0 +1,34 @@
+---
+# User settings
+app_user: "amal"
+install_base: "/home/amal/devops"
+
+# Java settings
+java_version: "17.0.9"
+java_home: "/home/pet-clinic/java/jdk-17.0.9"
+
+# Tomcat settings 
+tomcat_version: "10.1.18"
+tomcat_port: 9090
+tomcat_home: "/home/amal/devops/tomcat"
+tomcat_download_url: "https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.18/bin/apache-tomcat-10.1.18.tar.gz"
+tomcat_manager_user: "admin"
+tomcat_manager_password: "admin123"
+
+# Jenkins settings
+jenkins_version: "2.440.1"
+jenkins_home: "/home/amal/devops/jenkins"
+jenkins_port: 8080
+jenkins_download_url: "https://get.jenkins.io/war-stable/2.440.1/jenkins.war"
+
+# Nagios settings
+nagios_home: "/home/amal/devops/nagios"
+
+# Pet Clinic settings
+petclinic_repo: "https://github.com/spring-projects/spring-petclinic.git"
+petclinic_home: "/home/amal/devops/petclinic"
+
+# Maven settings
+maven_version: "3.9.6"
+maven_home: "/home/amal/devops/maven"
+maven_download_url: "https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz"

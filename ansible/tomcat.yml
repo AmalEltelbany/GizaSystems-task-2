@@ -1,0 +1,14 @@
+---
+- name: Install Tomcat
+  hosts: local
+
+  roles:
+    - tomcat
+
+  post_tasks:
+    - name: Start Tomcat
+      shell: "{{ tomcat_home }}/bin/start.sh"
+
+    - name: Show success message
+      debug:
+        msg: "Tomcat running at http://localhost:{{ tomcat_port }}"

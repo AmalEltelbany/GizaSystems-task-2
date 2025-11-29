@@ -1,0 +1,30 @@
+---
+# Step 1: Create directories
+- name: Create Jenkins directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ jenkins_home }}"
+    - "{{ jenkins_home }}/war"
+
+# Step 2: Download Jenkins WAR
+- name: Download Jenkins
+  get_url:
+    url: "{{ jenkins_download_url }}"
+    dest: "{{ jenkins_home }}/war/jenkins.war"
+
+# Step 3: Create start script
+- name: Create Jenkins start script
+  template:
+    src: start.sh.j2
+    dest: "{{ jenkins_home }}/start.sh"
+    mode: '0755'
+
+# Step 4: Create stop script
+- name: Create Jenkins stop script
+  template:
+    src: stop.sh.j2
+    dest: "{{ jenkins_home }}/stop.sh"
+    mode: '0755'

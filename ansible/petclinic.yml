@@ -1,0 +1,24 @@
+---
+- name: Build and Deploy Pet Clinic
+  hosts: local
+
+  roles:
+    - petclinic
+
+  post_tasks:
+    - name: Wait for Tomcat to start
+      pause:
+        seconds: 10
+
+    - name: Check PetClinic is accessible
+      uri:
+        url: "http://localhost:{{ tomcat_port }}/petclinic"
+        status_code: 200
+      register: result
+      retries: 5
+      delay: 5
+      until: result.status == 200
+
+    - name: Show success message
+      debug:
+        msg: "Pet Clinic deployed successfully! Access at http://localhost:{{ tomcat_port }}/petclinic"

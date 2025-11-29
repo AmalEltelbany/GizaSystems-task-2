@@ -1,0 +1,8 @@
+#!/bin/bash
+export JAVA_HOME={{ java_home }}
+export JENKINS_HOME={{ jenkins_home }}/data
+
+nohup $JAVA_HOME/bin/java -jar {{ jenkins_home }}/war/jenkins.war --httpPort={{ jenkins_port }} > {{ jenkins_home }}/jenkins.log 2>&1 &
+
+echo "Jenkins starting on http://localhost:{{ jenkins_port }}"
+echo "Check log: {{ jenkins_home }}/jenkins.log"

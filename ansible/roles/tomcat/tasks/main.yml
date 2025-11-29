@@ -1,0 +1,63 @@
+---
+# Step 1: Create folders
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ install_base }}/downloads"
+    - "{{ tomcat_home }}"
+
+# Step 2: Download Tomcat
+- name: Download Tomcat
+  get_url:
+    url: "{{ tomcat_download_url }}"
+    dest: "{{ install_base }}/downloads/tomcat.tar.gz"
+
+# Step 3: Extract Tomcat
+- name: Extract Tomcat
+  unarchive:
+    src: "{{ install_base }}/downloads/tomcat.tar.gz"
+    dest: "{{ tomcat_home }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+# Step 4: Configure port
+- name: Configure Tomcat port
+  template:
+    src: server.xml.j2
+    dest: "{{ tomcat_home }}/conf/server.xml"
+
+# Step 5: Configure users
+- name: Configure Tomcat users
+  template:
+    src: tomcat-users.xml.j2
+    dest: "{{ tomcat_home }}/conf/tomcat-users.xml"
+
+# Step 6: Allow manager access
+- name: Configure Manager access
+  template:
+    src: context.xml.j2
+    dest: "{{ tomcat_home }}/webapps/manager/META-INF/context.xml"
+
+# Step 7: Make scripts executable
+- name: Make scripts executable
+  file:
+    path: "{{ tomcat_home }}/bin"
+    mode: '0755'
+    recurse: yes
+
+# Step 8: Create start script
+- name: Create start script
+  template:
+    src: start.sh.j2
+    dest: "{{ tomcat_home }}/bin/start.sh"
+    mode: '0755'
+
+# Step 9: Create stop script
+- name: Create stop script
+  template:
+    src: stop.sh.j2
+    dest: "{{ tomcat_home }}/bin/stop.sh"
+    mode: '0755'
