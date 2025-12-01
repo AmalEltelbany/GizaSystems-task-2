@@ -4,11 +4,11 @@
 
 ![CI/CD Pipeline Architecture](diagram.png)
 
-
+---
 
 ## Project Overview
 
-This project implements a complete **CI/CD pipeline** that automatically builds, deploys, and monitors the **Spring PetClinic** application using:
+This project implements a complete **CI/CD pipeline** that automatically builds, deploys, and monitors the **Spring PetClinic** application.
 
 | Tool | Purpose | Port |
 |------|---------|------|
@@ -26,30 +26,22 @@ This project implements a complete **CI/CD pipeline** that automatically builds,
 1. [Prerequisites](#prerequisites)
 2. [Project Structure](#project-structure)
 3. [Quick Start](#quick-start)
-4. [Detailed Installation](#detailed-installation)
-5. [How It Works](#how-it-works)
-6. [Configuration Reference](#configuration-reference)
-7. [User Manual](#user-manual)
-8. [Troubleshooting](#troubleshooting)
+4. [How It Works](#how-it-works)
+5. [Configuration Reference](#configuration-reference)
+6. [User Manual](#user-manual)
+7. [Troubleshooting](#troubleshooting)
+8. [Task Requirements](#task-requirements)
 
 ---
 
 ## Prerequisites
-
-Before starting, ensure you have:
-
-- Linux-based operating system (Ubuntu/Debian recommended)
-- `sudo` access for initial setup
-- Internet connection to download dependencies
-
-### Required Packages (One-time setup)
 
 ```bash
 # Install Ansible
 sudo apt update
 sudo apt install ansible -y
 
-# Install Nagios Core (required for real monitoring)
+# Install Nagios Core
 sudo apt install nagios4 nagios-plugins -y
 ```
 
@@ -59,44 +51,29 @@ sudo apt install nagios4 nagios-plugins -y
 
 ```
 task-02/
-├── README.md                          # This file
-├── Jenkinsfile                        # CI/CD Pipeline definition
-├── diagram.drawio                     # Architecture diagram (draw.io)
-├── diagram.png                        # Architecture diagram (exported)
+├── README.md
+├── Jenkinsfile
+├── diagram.drawio
 ├── scripts/
-│   └── build.sh                       # Maven build script
+│   └── build.sh
 └── ansible/
-    ├── ansible.cfg                    # Ansible configuration
-    ├── inventory/
-    │   └── hosts                      # Inventory (localhost)
-    ├── group_vars/
-    │   └── all.yml                    # ★ All variables defined here
-    ├── tomcat.yml                     # Tomcat installation playbook
-    ├── jenkins.yml                    # Jenkins installation playbook
-    ├── nagios.yml                     # Nagios configuration playbook
-    ├── petclinic.yml                  # Build & deploy playbook
+    ├── group_vars/all.yml        # ★ All variables
+    ├── tomcat.yml
+    ├── jenkins.yml
+    ├── nagios.yml
+    ├── petclinic.yml
     └── roles/
-        ├── tomcat/                    # Tomcat role
-        │   ├── tasks/main.yml
+        ├── tomcat/
         │   └── templates/
-        │       ├── server.xml.j2      # ★ Port configuration
-        │       ├── tomcat-users.xml.j2 # ★ Admin credentials
-        │       ├── context.xml.j2     # Manager access
-        │       ├── start.sh.j2
-        │       └── stop.sh.j2
-        ├── jenkins/                   # Jenkins role
-        │   ├── tasks/main.yml
-        │   └── templates/
-        │       ├── start.sh.j2
-        │       └── stop.sh.j2
-        ├── petclinic/                 # PetClinic role
-        │   ├── tasks/main.yml         # ★ ServletInitializer creation
-        │   └── handlers/main.yml      # ★ JENKINS_NODE_COOKIE
-        └── nagios/                    # Nagios role
-            ├── tasks/main.yml
-            ├── handlers/main.yml
+        │       ├── server.xml.j2       # ★ Port 9090
+        │       └── tomcat-users.xml.j2 # ★ Admin credentials
+        ├── jenkins/
+        ├── petclinic/
+        │   ├── tasks/main.yml          # ★ ServletInitializer
+        │   └── handlers/main.yml       # ★ JENKINS_NODE_COOKIE
+        └── nagios/
             └── templates/
-                ├── tomcat_commands.cfg.j2  # ★ Real Nagios commands
+                ├── tomcat_commands.cfg.j2  # ★ check_http, check_tcp
                 └── tomcat_host.cfg.j2      # ★ Services definition
 ```
 
@@ -104,191 +81,67 @@ task-02/
 
 ## Quick Start
 
-### Option 1: Run Full Pipeline via Jenkins
-
-```bash
-# 1. Start Jenkins
-/home/amal/devops/jenkins/start.sh
-
-# 2. Open Jenkins in browser
-# http://localhost:8080
-
-# 3. Create pipeline job pointing to Jenkinsfile
-
-# 4. Click "Build Now"
-```
-
-### Option 2: Run Manually with Ansible
-
 ```bash
 cd /home/amal/task-02/ansible
 
-# Step 1: Install Tomcat
+# 1. Install Tomcat
 ansible-playbook tomcat.yml
 
-# Step 2: Build and deploy PetClinic
+# 2. Build and deploy PetClinic
 ansible-playbook petclinic.yml
 
-# Step 3: Configure Nagios monitoring
+# 3. Configure Nagios monitoring
 ansible-playbook nagios.yml --ask-become-pass
 ```
 
----
-
-## Detailed Installation
-
-### Step 1: Install Tomcat
-
-```bash
-cd /home/amal/task-02/ansible
-ansible-playbook tomcat.yml
-```
-
-**What it does:**
-- Downloads Apache Tomcat 10.1.18
-- Configures port **9090** (in `server.xml`)
-- Creates admin user **admin/admin123** (in `tomcat-users.xml`)
-- Enables manager access (in `context.xml`)
-- Creates start/stop scripts
-
-**Verify:**
-```bash
-/home/amal/devops/tomcat/bin/startup.sh
-curl http://localhost:9090
-# Should return Tomcat welcome page
-```
-
-### Step 2: Install Jenkins
-
-```bash
-ansible-playbook jenkins.yml
-```
-
-**What it does:**
-- Downloads Jenkins WAR file (v2.440.1)
-- Configures port **8080**
-- Creates start/stop scripts
-
-**Verify:**
-```bash
-/home/amal/devops/jenkins/start.sh
-# Wait 30 seconds for startup
-curl http://localhost:8080
-```
-
-**Get initial admin password:**
-```bash
-cat /home/amal/devops/jenkins/data/secrets/initialAdminPassword
-```
-
-### Step 3: Build and Deploy PetClinic
-
-```bash
-ansible-playbook petclinic.yml
-```
-
-**What it does:**
-1. Downloads PetClinic source from GitHub
-2. Downloads Maven 3.9.6
-3. Creates `ServletInitializer.java` (required for WAR deployment)
-4. Adds `<packaging>war</packaging>` to pom.xml
-5. Builds WAR file using Maven
-6. Copies WAR to Tomcat webapps
-7. Restarts Tomcat
-8. Verifies deployment with HTTP check
-
-**Verify:**
-```bash
-curl http://localhost:9090/petclinic/
-# Should return PetClinic homepage with "Welcome"
-```
-
-### Step 4: Configure Nagios Monitoring
-
-```bash
-ansible-playbook nagios.yml --ask-become-pass
-```
-
-**What it does:**
-1. Creates `tomcat_commands.cfg` with real Nagios plugins:
-   - `check_http` - HTTP response check
-   - `check_tcp` - TCP port check
-2. Creates `tomcat_host.cfg` with 4 services:
-   - Tomcat HTTP
-   - Tomcat TCP Port
-   - PetClinic Application
-   - Tomcat Manager
-3. Adds config files to `/etc/nagios4/nagios.cfg`
-4. Restarts Nagios Core daemon
-
-**Verify:**
-```bash
-# Check Nagios is running
-sudo systemctl status nagios4
-
-# Test real Nagios plugins manually
-/usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090
-/usr/lib/nagios/plugins/check_tcp -H 127.0.0.1 -p 9090
-
-# Open Nagios Web UI
-# http://localhost/nagios4/
-# Username: nagiosadmin
-```
+**Access:**
+- PetClinic: http://localhost:9090/petclinic/
+- Nagios: http://localhost/nagios4/
 
 ---
 
 ## How It Works
 
+### Pipeline Flow
+
+```
+User → Jenkins → Ansible → Tomcat
+         │                    ↑
+         │                    │ Monitor 24/7
+         └──→ Nagios Core ────┘
 ```
 
 ### Jenkinsfile Stages
 
-| Stage | Description | Command |
-|-------|-------------|---------|
-| **Build & Deploy** | Runs Ansible to build and deploy | `ansible-playbook petclinic.yml` |
-| **Verify Deployment** | Checks PetClinic is accessible | `curl localhost:9090/petclinic/` |
-| **Verify Monitoring** | Tests Nagios plugins | `check_http`, `check_tcp` |
+| Stage | Command |
+|-------|---------|
+| Build & Deploy | `ansible-playbook petclinic.yml` |
+| Verify Deployment | `curl localhost:9090/petclinic/` |
+| Verify Monitoring | `check_http`, `check_tcp` |
 
 ### Critical Configurations
 
 #### 1. ServletInitializer.java
-
-Spring Boot normally runs as JAR with embedded server. To run in Tomcat (WAR), we need:
-
+Allows Spring Boot to run as WAR in Tomcat (instead of JAR):
 ```java
 public class ServletInitializer extends SpringBootServletInitializer {
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(PetClinicApplication.class);
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder app) {
+        return app.sources(PetClinicApplication.class);
     }
 }
 ```
 
-**Location:** Created by `petclinic/tasks/main.yml`
-
 #### 2. JENKINS_NODE_COOKIE
-
-Jenkins kills child processes after pipeline ends. To keep Tomcat running:
-
+Prevents Jenkins from killing Tomcat after pipeline:
 ```bash
 export JENKINS_NODE_COOKIE=dontKillMe
 ```
 
-**Location:** `petclinic/handlers/main.yml`
-
 #### 3. Real Nagios Plugins
-
-We use built-in Nagios plugins (NOT custom scripts):
-
+Uses built-in Nagios plugins (not custom scripts):
 ```bash
-# Check HTTP response
 /usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090
-
-# Check TCP port
 /usr/lib/nagios/plugins/check_tcp -H 127.0.0.1 -p 9090
-
-# Check PetClinic with content
-/usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090 -u /petclinic/ -s "Welcome"
 ```
 
 ---
@@ -297,179 +150,72 @@ We use built-in Nagios plugins (NOT custom scripts):
 
 ### group_vars/all.yml
 
-All variables are centralized here:
-
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `tomcat_port` | 9090 | Tomcat HTTP port |
-| `jenkins_port` | 8080 | Jenkins HTTP port |
-| `tomcat_manager_user` | admin | Tomcat manager username |
-| `tomcat_manager_password` | admin123 | Tomcat manager password |
-| `java_home` | /home/pet-clinic/java/jdk-17.0.9 | Java installation |
-| `nagios_core_etc` | /etc/nagios4 | Nagios config directory |
-| `nagios_core_plugins` | /usr/lib/nagios/plugins | Nagios plugins directory |
-
-### Tomcat Templates
-
-| Template | Purpose |
-|----------|---------|
-| `server.xml.j2` | Sets port to `{{ tomcat_port }}` (9090) |
-| `tomcat-users.xml.j2` | Creates admin user with manager roles |
-| `context.xml.j2` | Removes IP restriction for manager access |
-
-### Nagios Templates
-
-| Template | Purpose |
-|----------|---------|
-| `tomcat_commands.cfg.j2` | Defines HOW to check (which plugins) |
-| `tomcat_host.cfg.j2` | Defines WHAT to monitor (services) |
+| Variable | Value |
+|----------|-------|
+| `tomcat_port` | 9090 |
+| `jenkins_port` | 8080 |
+| `tomcat_manager_user` | admin |
+| `tomcat_manager_password` | admin123 |
+| `nagios_core_etc` | /etc/nagios4 |
+| `nagios_core_plugins` | /usr/lib/nagios/plugins |
 
 ---
 
 ## User Manual
 
-### Starting Services
+### Start/Stop Services
 
 ```bash
-# Start Tomcat
+# Tomcat
 /home/amal/devops/tomcat/bin/startup.sh
-
-# Start Jenkins
-/home/amal/devops/jenkins/start.sh
-
-# Nagios Core (runs as system service)
-sudo systemctl start nagios4
-```
-
-### Stopping Services
-
-```bash
-# Stop Tomcat
 /home/amal/devops/tomcat/bin/shutdown.sh
 
-# Stop Jenkins
+# Jenkins
+/home/amal/devops/jenkins/start.sh
 /home/amal/devops/jenkins/stop.sh
 
-# Stop Nagios
+# Nagios
+sudo systemctl start nagios4
 sudo systemctl stop nagios4
 ```
 
-### Web Access URLs
+### Web Access
 
 | Application | URL | Credentials |
 |-------------|-----|-------------|
-| **PetClinic** | http://localhost:9090/petclinic/ | None |
-| **Tomcat Manager** | http://localhost:9090/manager/html | admin / admin123 |
-| **Jenkins** | http://localhost:8080 | See initial password |
-| **Nagios Core** | http://localhost/nagios4/ | nagiosadmin |
+| PetClinic | http://localhost:9090/petclinic/ | None |
+| Tomcat Manager | http://localhost:9090/manager/html | admin / admin123 |
+| Jenkins | http://localhost:8080 | Initial password in logs |
+| Nagios | http://localhost/nagios4/ | nagiosadmin |
 
-### Running the Jenkins Pipeline
+### Jenkins Pipeline Setup
 
 1. Open http://localhost:8080
 2. Create new **Pipeline** job
-3. Configure:
-   - **Definition:** Pipeline script from SCM
-   - **SCM:** Git
-   - **Repository URL:** /home/amal/task-02 (or your git URL)
-   - **Script Path:** Jenkinsfile
-4. Click **Save**
+3. Set **Repository URL:** `/home/amal/task-02`
+4. Set **Script Path:** `Jenkinsfile`
 5. Click **Build Now**
 
-### Checking Nagios Monitoring Status
+### Nagios Monitoring
 
-**Web UI:**
-1. Go to http://localhost/nagios4/
-2. Click **Services** in left menu
-3. Look for `tomcat-server` host with 4 services:
-   - Tomcat HTTP → OK
-   - Tomcat TCP Port → OK
-   - PetClinic Application → OK
-   - Tomcat Manager → OK
+Services monitored every 1 minute:
+- Tomcat HTTP
+- Tomcat TCP Port
+- PetClinic Application
+- Tomcat Manager
 
-**Command Line:**
-```bash
-# Check all services status
-/usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090
-# Expected: HTTP OK: HTTP/1.1 200 OK
-
-/usr/lib/nagios/plugins/check_tcp -H 127.0.0.1 -p 9090
-# Expected: TCP OK - 0.001 second response time
-
-/usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090 -u /petclinic/ -s "Welcome"
-# Expected: HTTP OK: HTTP/1.1 200 OK - contains "Welcome"
-```
-
-### Monitoring Behavior
-
-- **Check Interval:** Every 1 minute
-- **Max Attempts:** 3 (before CRITICAL)
-- **Notification:** Every 30 minutes if problem persists
-
-**Test monitoring by stopping Tomcat:**
-```bash
-/home/amal/devops/tomcat/bin/shutdown.sh
-# Wait 1-2 minutes
-# Check Nagios UI - services should show CRITICAL
-```
+Test by stopping Tomcat → services show CRITICAL in Nagios UI.
 
 ---
 
 ## Troubleshooting
 
-### PetClinic not accessible
+| Problem | Solution |
+|---------|----------|
+| PetClinic not accessible | Check `tail -50 /home/amal/devops/tomcat/logs/catalina.out` |
+| Tomcat stops after pipeline | Ensure `JENKINS_NODE_COOKIE=dontKillMe` in handler |
+| Nagios playbook needs sudo | Run with `--ask-become-pass` |
+| Nagios UNKNOWN status | Run `sudo /usr/sbin/nagios4 -v /etc/nagios4/nagios.cfg` |
 
-```bash
-# Check Tomcat is running
-ps aux | grep tomcat
+---
 
-# Check Tomcat logs
-tail -50 /home/amal/devops/tomcat/logs/catalina.out
-
-# Check WAR file exists
-ls -la /home/amal/devops/tomcat/webapps/petclinic.war
-```
-
-### Jenkins pipeline fails at "Configure Monitoring"
-
-The Nagios playbook requires sudo. Either:
-
-1. Run Nagios playbook manually:
-```bash
-ansible-playbook nagios.yml --ask-become-pass
-```
-
-2. Or configure passwordless sudo for Jenkins:
-```bash
-sudo bash -c 'echo "jenkins ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/jenkins'
-```
-
-### Nagios shows UNKNOWN status
-
-Check the command configuration:
-```bash
-sudo /usr/sbin/nagios4 -v /etc/nagios4/nagios.cfg
-```
-
-If errors, check config files:
-```bash
-cat /etc/nagios4/objects/tomcat_commands.cfg
-cat /etc/nagios4/objects/tomcat_host.cfg
-```
-
-### Tomcat stops after Jenkins pipeline
-
-Ensure `JENKINS_NODE_COOKIE=dontKillMe` is in the handler:
-```bash
-cat /home/amal/task-02/ansible/roles/petclinic/handlers/main.yml
-```
-
-### Build fails with Java error
-
-```bash
-# Verify Java version
-$JAVA_HOME/bin/java -version
-# Should be 17.x
-
-# Verify Maven
-/home/amal/devops/maven/bin/mvn -version
-```
