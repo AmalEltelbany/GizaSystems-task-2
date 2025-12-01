@@ -4,10 +4,6 @@
 
 ![CI/CD Pipeline Architecture](diagram.png)
 
-> **Note:** Export the `diagram.drawio` file as PNG and save as `diagram.png` in the project root.
->
-> In draw.io: **File → Export as → PNG → Save**
-
 ---
 
 ## Project Overview
