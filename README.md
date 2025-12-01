@@ -30,7 +30,7 @@ This project implements a complete **CI/CD pipeline** that automatically builds,
 5. [Configuration Reference](#configuration-reference)
 6. [User Manual](#user-manual)
 7. [Troubleshooting](#troubleshooting)
-8. [Task Requirements](#task-requirements)
+
 
 ---
 
@@ -209,5 +209,5 @@ Test by stopping Tomcat → services show CRITICAL in Nagios UI.
 | Nagios playbook needs sudo | Run with `--ask-become-pass` |
 | Nagios UNKNOWN status | Run `sudo /usr/sbin/nagios4 -v /etc/nagios4/nagios.cfg` |
 
----
+
 
