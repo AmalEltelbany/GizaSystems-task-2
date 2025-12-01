@@ -4,7 +4,7 @@
 
 ![CI/CD Pipeline Architecture](diagram.png)
 
----
+
 
 ## Project Overview
 
@@ -239,21 +239,6 @@ sudo systemctl status nagios4
 
 ## How It Works
 
-### Pipeline Flow
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Developer  │────→│   JENKINS   │────→│   ANSIBLE   │────→│   TOMCAT    │
-│             │     │  Port 8080  │     │   Roles     │     │  Port 9090  │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-   Click Build         Jenkinsfile        petclinic.yml       petclinic.war
-                                                                   ↑
-                                                              Monitor 24/7
-                                                                   │
-                                                           ┌─────────────┐
-                                                           │   NAGIOS    │
-                                                           │    Core     │
-                                                           └─────────────┘
 ```
 
 ### Jenkinsfile Stages
@@ -488,23 +473,3 @@ $JAVA_HOME/bin/java -version
 # Verify Maven
 /home/amal/devops/maven/bin/mvn -version
 ```
-
----
-
-## Task Requirements Checklist
-
-| Requirement | Status | Implementation |
-|-------------|--------|----------------|
-| Install Ansible using package manager | ✅ | `sudo apt install ansible` |
-| Install Tomcat using Ansible | ✅ | `ansible/tomcat.yml` |
-| Configure Tomcat deployment manager | ✅ | `tomcat-users.xml.j2`, `context.xml.j2` |
-| Install Nagios using Ansible | ✅ | `ansible/nagios.yml` (configures Nagios Core) |
-| Install Jenkins using Ansible | ✅ | `ansible/jenkins.yml` |
-| Build PetClinic using shell script | ✅ | `scripts/build.sh` |
-| Deploy PetClinic using Ansible | ✅ | `ansible/petclinic.yml` |
-| Automated sanity checks | ✅ | HTTP check in playbook + Jenkinsfile |
-| Nagios monitors Tomcat | ✅ | Real `check_http`, `check_tcp` plugins |
-| Application on port 9090 | ✅ | Configured in `group_vars/all.yml` |
-| Jenkinsfile for CI/CD | ✅ | `Jenkinsfile` with 3 stages |
-| No package managers (except Ansible) | ✅ | All tools downloaded as archives |
-
