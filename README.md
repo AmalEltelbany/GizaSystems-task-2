@@ -512,15 +512,3 @@ $JAVA_HOME/bin/java -version
 | Jenkinsfile for CI/CD | ✅ | `Jenkinsfile` with 3 stages |
 | No package managers (except Ansible) | ✅ | All tools downloaded as archives |
 
----
-
-## Author
-
-**Amal Eltelbany**
-DevOps Internship - Task 2
-
----
-
-## License
-
-This project is for educational purposes.
