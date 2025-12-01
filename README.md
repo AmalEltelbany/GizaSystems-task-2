@@ -102,14 +102,6 @@ ansible-playbook nagios.yml --ask-become-pass
 
 ## How It Works
 
-### Pipeline Flow
-
-```
-User → Jenkins → Ansible → Tomcat
-         │                    ↑
-         │                    │ Monitor 24/7
-         └──→ Nagios Core ────┘
-```
 
 ### Jenkinsfile Stages
 
