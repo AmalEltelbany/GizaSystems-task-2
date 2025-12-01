@@ -11,31 +11,35 @@ pipeline {
     stages {
         stage('Build and Deploy') {
             steps {
-                echo 'Building and deploying using Ansible (which calls build.sh)...'
+                echo 'Building and deploying using Ansible...'
                 sh 'cd ${ANSIBLE_DIR} && ansible-playbook petclinic.yml'
             }
         }
 
-        stage('Verify') {
+        stage('Verify Deployment') {
             steps {
-                echo 'Running sanity checks...'
+                echo 'Verifying PetClinic is running...'
                 sh '''
                     sleep 15
                     curl -f http://localhost:9090/petclinic/ || exit 1
-                    echo "Deployment verified successfully!"
+                    echo "PetClinic is running!"
+                '''
+            }
+        }
+
+        stage('Verify Monitoring') {
+            steps {
+                echo 'Verifying Nagios monitoring with real plugins...'
+                sh '''
+                    /usr/lib/nagios/plugins/check_http -H 127.0.0.1 -p 9090
+                    /usr/lib/nagios/plugins/check_tcp -H 127.0.0.1 -p 9090
+                    echo "Nagios monitoring verified!"
                 '''
             }
         }
     }
 
     post {
-        always {
-            sh '''
-                export JAVA_HOME=/home/pet-clinic/java/jdk-17.0.9
-                export CATALINA_HOME=/home/amal/devops/tomcat
-                $CATALINA_HOME/bin/startup.sh || true
-            '''
-        }
         success {
             echo 'Pipeline completed successfully!'
         }

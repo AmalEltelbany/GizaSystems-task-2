@@ -1,32 +1,55 @@
 ---
-# Step 1: Create directories
-- name: Create Nagios directories
-  file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-  loop:
-    - "{{ nagios_home }}"
-    - "{{ nagios_home }}/bin"
-    - "{{ nagios_home }}/etc"
-    - "{{ nagios_home }}/var"
+###############################################################################
+# NAGIOS CORE MONITORING ROLE
+# Configures Real Nagios Core to monitor Tomcat
+# Uses ONLY built-in Nagios plugins (check_http, check_tcp)
+# Requires: sudo apt install nagios4 (done as prerequisite)
+###############################################################################
 
-# Step 2: Create Tomcat check script
-- name: Create Tomcat monitoring script
+# Step 1: Create Tomcat commands configuration
+- name: Create Tomcat commands for Nagios Core
+  become: yes
   template:
-    src: check_tomcat.sh.j2
-    dest: "{{ nagios_home }}/bin/check_tomcat.sh"
-    mode: '0755'
+    src: tomcat_commands.cfg.j2
+    dest: "{{ nagios_core_etc }}/objects/tomcat_commands.cfg"
+    mode: '0644'
+  notify: Restart Nagios Core
 
-# Step 3: Create Nagios config
-- name: Create Nagios config file
+# Step 3: Create Tomcat host and services configuration
+- name: Create Tomcat host and services for Nagios Core
+  become: yes
   template:
-    src: nagios.cfg.j2
-    dest: "{{ nagios_home }}/etc/nagios.cfg"
+    src: tomcat_host.cfg.j2
+    dest: "{{ nagios_core_etc }}/objects/tomcat_host.cfg"
+    mode: '0644'
+  notify: Restart Nagios Core
 
-# Step 4: Create monitoring runner script
-- name: Create monitoring script
-  template:
-    src: monitor.sh.j2
-    dest: "{{ nagios_home }}/bin/monitor.sh"
-    mode: '0755'
+# Step 4: Include tomcat_commands.cfg in Nagios Core
+- name: Include tomcat_commands.cfg in Nagios Core
+  become: yes
+  lineinfile:
+    path: "{{ nagios_core_etc }}/nagios.cfg"
+    line: "cfg_file={{ nagios_core_etc }}/objects/tomcat_commands.cfg"
+    state: present
+  notify: Restart Nagios Core
+
+# Step 5: Include tomcat_host.cfg in Nagios Core
+- name: Include tomcat_host.cfg in Nagios Core
+  become: yes
+  lineinfile:
+    path: "{{ nagios_core_etc }}/nagios.cfg"
+    line: "cfg_file={{ nagios_core_etc }}/objects/tomcat_host.cfg"
+    state: present
+  notify: Restart Nagios Core
+
+# Step 6: Verify Nagios Core configuration
+- name: Verify Nagios Core configuration
+  become: yes
+  shell: /usr/sbin/nagios4 -v {{ nagios_core_etc }}/nagios.cfg
+  register: nagios_verify
+  changed_when: false
+
+- name: Show Nagios verification result
+  debug:
+    msg: "Nagios Core configuration is valid!"
+  when: nagios_verify.rc == 0

@@ -1,18 +1,7 @@
 ---
-- name: Install Nagios Monitoring
+- name: Configure Nagios Core Monitoring
   hosts: local
+  become: yes
 
   roles:
     - nagios
-
-  post_tasks:
-    - name: Run first monitoring check
-      shell: "{{ nagios_home }}/bin/monitor.sh"
-
-    - name: Show Tomcat status
-      shell: "{{ nagios_home }}/bin/check_tomcat.sh"
-      register: tomcat_status
-
-    - name: Display status
-      debug:
-        msg: "{{ tomcat_status.stdout }}"

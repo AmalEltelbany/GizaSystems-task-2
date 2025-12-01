@@ -5,5 +5,6 @@
     sleep 2
     export JAVA_HOME={{ java_home }}
     export CATALINA_HOME={{ tomcat_home }}
-    {{ tomcat_home }}/bin/startup.sh
+    export JENKINS_NODE_COOKIE=dontKillMe
+    nohup {{ tomcat_home }}/bin/startup.sh > /dev/null 2>&1 &
     sleep 10

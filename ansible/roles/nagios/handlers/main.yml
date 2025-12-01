@@ -1,0 +1,6 @@
+---
+- name: Restart Nagios Core
+  become: yes
+  service:
+    name: nagios4
+    state: restarted
